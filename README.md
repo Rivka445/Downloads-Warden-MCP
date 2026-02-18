@@ -1,81 +1,33 @@
 # 📥 Downloads Warden MCP
 
-A Model Context Protocol (MCP) server for intelligent Downloads folder management powered by AI.
+Professional MCP server for intelligent Downloads folder management using FastMCP and Python 3.10+.
 
 ## 🎯 Overview
 
-Downloads Warden transforms your Downloads folder from chaos into an organized, efficient system. By connecting to Claude through MCP, the AI agent can automatically:
-- Analyze folder structure and statistics
-- Sort files into smart categories
-- Find and remove duplicate files
-- Extract archives automatically
-- Clean up old installer files
-- Identify large files taking up space
+Downloads Warden is a Model Context Protocol (MCP) server that transforms your Downloads folder from chaos into an organized, efficient system. By connecting to Claude through MCP, the AI agent can automatically manage your files with intelligent operations.
 
-## 🛠 Features
+## ✨ Features
 
-### 1. **scan_downloads**
-Scans the Downloads folder and generates a detailed report:
-- Total number of files and folder size
-- Breakdown by file category (Documents, Media, Installers, Code, Archives, Other)
-- Top file types by count and size
+### 6 Powerful Tools
 
-```
-Usage: "קלאוד, תגיד לי מה המצב בתיקיית ההורדות שלי כרגע?"
-```
+| Tool | Description | Type |
+|------|-------------|------|
+| **scan_downloads** | Analyze folder structure and statistics | Read-only |
+| **smart_sort_files** | Organize files into intelligent categories | Write |
+| **deduplicate_by_hash** | Find and remove exact duplicates | Write |
+| **auto_extract_and_cleanup** | Extract ZIP files automatically | Write |
+| **clear_installers** | Remove old installation files | Write |
+| **find_large_files** | Identify space-hogging files | Read-only |
 
-### 2. **smart_sort_files**
-Intelligently sorts all files into category folders:
-- `documents/` - PDF, DOCX, TXT, XLSX, PPTX
-- `media/` - JPG, PNG, MP4, MP3, etc.
-- `installers/` - EXE, MSI, DMG, PKG
-- `code/` - PY, JS, TS, HTML, CSS, JSON
-- `archives/` - ZIP, RAR, 7Z, TAR
-- `other/` - Miscellaneous files
+### Smart Organization
 
-```
-Usage: "תעשה סדר ותעביר כל דבר למקום שלו"
-```
-
-### 3. **deduplicate_by_hash**
-Finds and removes duplicate files using SHA-256 hashing:
-- Identifies exact duplicates even with different names
-- Keeps one copy, removes all others
-- Saves significant disk space
-
-```
-Usage: "תנקה כפילויות ותחסוך לי מקום"
-```
-
-### 4. **auto_extract_and_cleanup**
-Extracts archive files and removes originals:
-- Supports ZIP, RAR, 7Z, TAR, GZ
-- Creates organized extraction directories
-- Automatically cleans up archive files
-
-```
-Usage: "תחלץ את כל ההורדות האחרונות ותנקה את ה-ZIP"
-```
-
-### 5. **clear_installers**
-Removes old installer files (older than 7 days):
-- Identifies .exe, .msi, .dmg, .pkg files
-- Checks modification date
-- Safely removes unused installers
-
-```
-Usage: "תמחק מתקינים ישנים שכבר לא צריך"
-```
-
-### 6. **find_large_files**
-Identifies files exceeding a specified size threshold:
-- Default threshold: 500MB
-- Lists top 20 largest files
-- Shows total space used by large files
-
-```
-Usage: "תראה לי מה לוקח הכי הרבה מקום בהורדות"
-```
+Automatically sorts files into categories:
+- 📄 **documents** - PDF, DOCX, TXT, XLSX, PPTX
+- 🎬 **media** - JPG, PNG, MP4, MP3, GIF
+- 🔧 **installers** - EXE, MSI, DMG, PKG
+- 💻 **code** - PY, JS, TS, HTML, CSS, JSON
+- 📦 **archives** - ZIP, RAR, 7Z, TAR, GZ
+- 📂 **other** - Miscellaneous files
 
 ## 📋 Prerequisites
 
@@ -106,33 +58,64 @@ venv\Scripts\activate
 # On macOS/Linux:
 source venv/bin/activate
 
-# Install MCP SDK
-pip install mcp
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.10 or higher
+- pip or uv package manager
+- Claude Desktop (for testing)
+
+### Installation
+
+```bash
+# Clone or navigate to project
+cd downloads-warden
+
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+# or
+source venv/bin/activate  # macOS/Linux
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-### 3. Configure Claude Desktop
+### Run the Server
 
-Add the following to your Claude Desktop configuration file:
+```bash
+# Direct run
+python src/server.py
 
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "downloads-warden": {
-      "command": "python",
-      "args": [
-        "path/to/downloads-warden/src/server.py"
-      ]
-    }
-  }
-}
+# Or with uv (if installed)
+uv run src/server.py
 ```
 
-### 4. Restart Claude Desktop
+## 🧪 Testing
 
-Close and reopen Claude Desktop to load the MCP server.
+### Unit Tests
+
+```bash
+# Install test dependencies
+pip install pytest pytest-asyncio
+
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=src
+```
+
+**Test Results:** ✅ 13/13 tests passing
+
+### With MCP Inspector
+
+```bash
+mcp-inspector python src/server.py
+```
+
+Open http://localhost:3000 for interactive tool testing.
 
 ## 💡 Usage Examples
 
