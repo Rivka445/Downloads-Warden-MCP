@@ -1,4 +1,4 @@
-# 📥 Downloads Warden MCP
+# 📥 git init
 
 Professional MCP server for intelligent Downloads folder management using FastMCP and Python 3.10+.
 
@@ -8,13 +8,14 @@ Downloads Warden is a Model Context Protocol (MCP) server that transforms your D
 
 ## ✨ Features
 
-### 6 Powerful Tools
+### 7 Powerful Tools
 
 | Tool | Description | Type |
 |------|-------------|------|
 | **scan_downloads** | Analyze folder structure and statistics | Read-only |
 | **smart_sort_files** | Organize files into intelligent categories | Write |
 | **deduplicate_by_hash** | Find and remove exact duplicates | Write |
+| **deduplicate_folders** | Find and remove duplicate folders | Write |
 | **auto_extract_and_cleanup** | Extract ZIP files automatically | Write |
 | **clear_installers** | Remove old installation files | Write |
 | **find_large_files** | Identify space-hogging files | Read-only |
@@ -137,7 +138,8 @@ Claude will:
 1. Run `smart_sort_files`
 2. Run `auto_extract_and_cleanup`
 3. Run `deduplicate_by_hash`
-4. Report progress
+4. Run `deduplicate_folders`
+5. Report progress
 
 **Example 3: Space Management**
 > "כמה מקום אני יכול לחסוך?"
@@ -200,6 +202,12 @@ asyncio.run(test())
 - **Input:** None
 - **Output:** Number of deleted duplicates
 - **Side Effects:** Removes files
+
+### Tool: deduplicate_folders
+- **Input:** None
+- **Output:** Number of deleted duplicate folders
+- **Side Effects:** Removes duplicate directories
+- **Description:** Identifies folders with identical content and removes duplicates while keeping the original
 
 ### Tool: auto_extract_and_cleanup
 - **Input:** None

@@ -10,8 +10,8 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from src.utils import get_downloads_path
-from src.services import DownloadsService
+from utils import get_downloads_path
+from services import DownloadsService
 
 # Setup logging to stderr to avoid corrupting stdio-based MCP
 logging.basicConfig(
@@ -42,26 +42,26 @@ async def scan_downloads() -> str:
     logger.info("Scanning downloads folder")
     result = downloads_service.scan_downloads()
     
-    if not result.success:
-        return result.message
+    if not result['success']:
+        return result['message']
     
-    stats = result.data
+    stats = result['stats']
     
     # Format output
     report = f"""📊 Downloads Folder Analysis Report
 {'='*50}
 
 📈 Overall Statistics:
-   Total Files: {stats.total_files}
-   Total Size: {stats.total_size_mb:.2f} MB
+   Total Files: {stats['total_files']}
+   Total Size: {stats['total_size_mb']:.2f} MB
 
 📁 Files by Category:
 """
-    for category, data in sorted(stats.by_category.items()):
+    for category, data in sorted(stats['by_category'].items()):
         report += f"   • {category.upper()}: {data['count']} files ({data['size_mb']:.2f} MB)\n"
     
     report += "\n📄 Top 10 File Types:\n"
-    sorted_exts = sorted(stats.by_extension.items(), key=lambda x: x[1]['count'], reverse=True)[:10]
+    sorted_exts = sorted(stats['by_extension'].items(), key=lambda x: x[1]['count'], reverse=True)[:10]
     for ext, data in sorted_exts:
         report += f"   • {ext}: {data['count']} files ({data['size_mb']:.2f} MB)\n"
     
@@ -83,8 +83,8 @@ async def smart_sort_files() -> str:
     logger.info("Starting smart sort operation")
     result = downloads_service.smart_sort_files()
     
-    report = f"{'✅' if result.success else '❌'} Smart Sort Complete!\n\n"
-    report += f"Moved {result.count} files into organized categories:\n"
+    report = f"{'✅' if result['success'] else '❌'} Smart Sort Complete!\n\n"
+    report += f"Moved {result['count']} files into organized categories:\n"
     report += f"  • documents/\n"
     report += f"  • media/\n"
     report += f"  • installers/\n"
@@ -92,9 +92,9 @@ async def smart_sort_files() -> str:
     report += f"  • archives/\n"
     report += f"  • other/\n"
     
-    if result.errors:
+    if result['errors']:
         report += f"\n⚠️ Errors:\n"
-        for error in result.errors:
+        for error in result['errors']:
             report += f"  • {error}\n"
     
     return report
@@ -114,7 +114,7 @@ async def deduplicate_by_hash() -> str:
     result = downloads_service.deduplicate_by_hash()
     
     report = f"🗑️ Deduplication Complete!\n\n"
-    report += f"Removed {result.count} duplicate files\n"
+    report += f"Removed {result['count']} duplicate files\n"
     report += f"Saved space by eliminating exact copies\n"
     
     return report
@@ -134,13 +134,13 @@ async def auto_extract_and_cleanup() -> str:
     result = downloads_service.auto_extract_and_cleanup()
     
     report = f"📦 Extraction Complete!\n\n"
-    report += f"Extracted {result.count} archive files\n"
-    if result.count > 0:
+    report += f"Extracted {result['count']} archive files\n"
+    if result['count'] > 0:
         report += f"Cleaned up original archive files\n"
     
-    if result.errors:
+    if result['errors']:
         report += f"\n⚠️ Errors:\n"
-        for error in result.errors:
+        for error in result['errors']:
             report += f"  • {error}\n"
     
     return report
@@ -160,7 +160,7 @@ async def clear_installers() -> str:
     result = downloads_service.clear_installers()
     
     report = f"🧹 Installer Cleanup Complete!\n\n"
-    report += f"Removed {result.count} old installer files (older than 7 days)\n"
+    report += f"Removed {result['count']} old installer files (older than 7 days)\n"
     report += f"Freed up space from unused installation files\n"
     
     return report
@@ -178,12 +178,12 @@ async def find_large_files(min_size_mb: float = 500) -> str:
     logger.info(f"Finding files larger than {min_size_mb}MB")
     result = downloads_service.find_large_files(min_size_mb)
     
-    if not result.success:
-        return result.message
+    if not result['success']:
+        return result['message']
     
     # Get detailed file list
     from pathlib import Path
-    from src.utils import get_file_size_mb
+    from utils.file_utils import get_file_size_mb
     
     large_files = []
     for file_path in Path(downloads_path).rglob('*'):
@@ -207,6 +207,32 @@ async def find_large_files(min_size_mb: float = 500) -> str:
         report += f"   ... and {len(large_files) - 20} more files\n"
     
     report += f"\nTotal size of large files: {total_size:.2f} MB\n"
+    
+    return report
+
+
+@mcp.tool()
+async def deduplicate_folders() -> str:
+    """Find and remove duplicate folders based on their contents.
+    
+    This tool:
+    - Scans all folders in Downloads
+    - Compares folder contents using SHA-256 hashes
+    - Identifies duplicate folders
+    - Removes duplicates while keeping the original
+    - Safely handles errors during deletion
+    """
+    logger.info("Starting folder deduplication")
+    result = downloads_service.deduplicate_folders()
+    
+    report = f"📁 Folder Deduplication Complete!\n\n"
+    report += f"Removed {result['count']} duplicate folders\n"
+    report += f"Freed up space by eliminating redundant directories\n"
+    
+    if result['errors']:
+        report += f"\n⚠️ Errors:\n"
+        for error in result['errors']:
+            report += f"  • {error}\n"
     
     return report
 

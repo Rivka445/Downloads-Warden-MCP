@@ -6,8 +6,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-from src.utils import get_file_category, calculate_file_hash, get_file_size_mb
-from src.models import FileStatistics, ScanResult, ProcessingResult
+from utils.file_utils import get_file_category, calculate_file_hash, get_file_size_mb
 
 
 class DownloadsService:
@@ -17,14 +16,14 @@ class DownloadsService:
         """Initialize with downloads path."""
         self.downloads_path = Path(downloads_path)
     
-    def scan_downloads(self) -> ScanResult:
+    def scan_downloads(self):
         """Scan and analyze Downloads folder."""
         try:
             if not self.downloads_path.exists():
-                return ScanResult(
-                    success=False,
-                    message=f"Downloads folder not found at {self.downloads_path}"
-                )
+                return {
+                    'success': False,
+                    'message': f"Downloads folder not found at {self.downloads_path}"
+                }
             
             stats = {
                 'total_files': 0,
@@ -47,26 +46,19 @@ class DownloadsService:
                     stats['by_extension'][ext]['count'] += 1
                     stats['by_extension'][ext]['size_mb'] += size_mb
             
-            file_stats = FileStatistics(
-                total_files=stats['total_files'],
-                total_size_mb=stats['total_size_mb'],
-                by_category=dict(stats['by_category']),
-                by_extension=dict(stats['by_extension'])
-            )
-            
-            return ScanResult(
-                success=True,
-                message="Successfully scanned downloads folder",
-                data=file_stats
-            )
+            return {
+                'success': True,
+                'message': 'Successfully scanned downloads folder',
+                'stats': dict(stats)
+            }
         
         except Exception as e:
-            return ScanResult(
-                success=False,
-                message=f"Error scanning downloads: {str(e)}"
-            )
+            return {
+                'success': False,
+                'message': f"Error scanning downloads: {str(e)}"
+            }
     
-    def smart_sort_files(self) -> ProcessingResult:
+    def smart_sort_files(self):
         """Sort files into category folders."""
         try:
             moved_count = 0
@@ -86,26 +78,25 @@ class DownloadsService:
                     except Exception as e:
                         errors.append(f"Error moving {file_path.name}: {str(e)}")
             
-            return ProcessingResult(
-                success=True,
-                message=f"Sorted {moved_count} files",
-                count=moved_count,
-                errors=errors if errors else None
-            )
+            return {
+                'success': True,
+                'message': f'Sorted {moved_count} files',
+                'count': moved_count,
+                'errors': errors if errors else None
+            }
         
         except Exception as e:
-            return ProcessingResult(
-                success=False,
-                message=f"Error sorting files: {str(e)}"
-            )
+            return {
+                'success': False,
+                'message': f"Error sorting files: {str(e)}"
+            }
     
-    def deduplicate_by_hash(self) -> ProcessingResult:
+    def deduplicate_by_hash(self):
         """Remove duplicate files based on SHA-256 hash."""
         try:
             hash_map = defaultdict(list)
             deleted_count = 0
             
-            # Calculate hashes for all files
             for file_path in self.downloads_path.rglob('*'):
                 if file_path.is_file():
                     try:
@@ -114,26 +105,25 @@ class DownloadsService:
                     except Exception:
                         pass
             
-            # Remove duplicates, keeping the first occurrence
             for file_hash, file_list in hash_map.items():
                 if len(file_list) > 1:
                     for duplicate_file in file_list[1:]:
                         duplicate_file.unlink()
                         deleted_count += 1
             
-            return ProcessingResult(
-                success=True,
-                message=f"Removed {deleted_count} duplicate files",
-                count=deleted_count
-            )
+            return {
+                'success': True,
+                'message': f'Removed {deleted_count} duplicate files',
+                'count': deleted_count
+            }
         
         except Exception as e:
-            return ProcessingResult(
-                success=False,
-                message=f"Error deduplicating files: {str(e)}"
-            )
+            return {
+                'success': False,
+                'message': f"Error deduplicating files: {str(e)}"
+            }
     
-    def auto_extract_and_cleanup(self) -> ProcessingResult:
+    def auto_extract_and_cleanup(self):
         """Extract ZIP files and remove originals."""
         try:
             extracted_count = 0
@@ -151,20 +141,20 @@ class DownloadsService:
                 except Exception as e:
                     errors.append(f"Error extracting {archive_file.name}: {str(e)}")
             
-            return ProcessingResult(
-                success=True,
-                message=f"Extracted {extracted_count} archives",
-                count=extracted_count,
-                errors=errors if errors else None
-            )
+            return {
+                'success': True,
+                'message': f'Extracted {extracted_count} archives',
+                'count': extracted_count,
+                'errors': errors if errors else None
+            }
         
         except Exception as e:
-            return ProcessingResult(
-                success=False,
-                message=f"Error extracting archives: {str(e)}"
-            )
+            return {
+                'success': False,
+                'message': f"Error extracting archives: {str(e)}"
+            }
     
-    def clear_installers(self) -> ProcessingResult:
+    def clear_installers(self):
         """Remove old installer files (older than 7 days)."""
         try:
             deleted_count = 0
@@ -178,19 +168,19 @@ class DownloadsService:
                         file_path.unlink()
                         deleted_count += 1
             
-            return ProcessingResult(
-                success=True,
-                message=f"Removed {deleted_count} old installer files",
-                count=deleted_count
-            )
+            return {
+                'success': True,
+                'message': f'Removed {deleted_count} old installer files',
+                'count': deleted_count
+            }
         
         except Exception as e:
-            return ProcessingResult(
-                success=False,
-                message=f"Error clearing installers: {str(e)}"
-            )
+            return {
+                'success': False,
+                'message': f"Error clearing installers: {str(e)}"
+            }
     
-    def find_large_files(self, min_size_mb: float = 500) -> ProcessingResult:
+    def find_large_files(self, min_size_mb: float = 500):
         """Find files larger than specified size."""
         try:
             large_files = []
@@ -203,16 +193,74 @@ class DownloadsService:
             
             large_files.sort(key=lambda x: x[1], reverse=True)
             
-            result_text = f"Found {len(large_files)} files larger than {min_size_mb}MB"
-            
-            return ProcessingResult(
-                success=True,
-                message=result_text,
-                count=len(large_files)
-            )
+            return {
+                'success': True,
+                'message': f'Found {len(large_files)} files larger than {min_size_mb}MB',
+                'count': len(large_files)
+            }
         
         except Exception as e:
-            return ProcessingResult(
-                success=False,
-                message=f"Error finding large files: {str(e)}"
-            )
+            return {
+                'success': False,
+                'message': f"Error finding large files: {str(e)}"
+            }
+    
+    def deduplicate_folders(self):
+        """Remove duplicate folders based on their contents."""
+        try:
+            folder_hashes = {}
+            duplicate_folders = []
+            
+            # Get all directories
+            for folder_path in sorted(self.downloads_path.iterdir()):
+                if folder_path.is_dir() and not folder_path.name.startswith('.'):
+                    try:
+                        # Calculate hash based on folder contents
+                        folder_hash = self._calculate_folder_hash(folder_path)
+                        
+                        if folder_hash in folder_hashes:
+                            # Found a duplicate folder
+                            duplicate_folders.append((folder_path, folder_hashes[folder_hash]))
+                        else:
+                            folder_hashes[folder_hash] = folder_path
+                    except Exception:
+                        pass
+            
+            # Delete duplicate folders (keep first, remove duplicates)
+            deleted_count = 0
+            errors = []
+            for duplicate_folder, original_folder in duplicate_folders:
+                try:
+                    shutil.rmtree(str(duplicate_folder))
+                    deleted_count += 1
+                except Exception as e:
+                    errors.append(f"Error deleting {duplicate_folder.name}: {str(e)}")
+            
+            return {
+                'success': True,
+                'message': f'Removed {deleted_count} duplicate folders',
+                'count': deleted_count,
+                'errors': errors if errors else None
+            }
+        
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error deduplicating folders: {str(e)}"
+            }
+    
+    def _calculate_folder_hash(self, folder_path: Path) -> str:
+        """Calculate hash based on folder structure and contents."""
+        import hashlib
+        hash_obj = hashlib.sha256()
+        
+        # Get all files in folder recursively
+        for file_path in sorted(folder_path.rglob('*')):
+            if file_path.is_file():
+                try:
+                    file_hash = calculate_file_hash(str(file_path))
+                    hash_obj.update(file_hash.encode())
+                except Exception:
+                    pass
+        
+        return hash_obj.hexdigest()
