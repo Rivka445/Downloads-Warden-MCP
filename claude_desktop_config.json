@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "downloads-warden": {
+      "command": "python",
+      "args": [
+        "C:\\Users\\330580861\\Desktop\\ריקי ורבקה\\downloads-warden\\src\\server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "C:\\Users\\330580861\\Desktop\\ריקי ורבקה\\downloads-warden"
+      }
+    }
+  }
+}
