@@ -73,7 +73,7 @@ pytest tests/ -v
 pytest tests/ --cov=src --cov-report=term-missing
 ```
 
-**46 tests — all passing.**
+**49 tests — all passing.**
 
 ---
 
@@ -86,6 +86,24 @@ ruff check src/
 # Type check
 mypy src/
 ```
+
+---
+
+## 🛡️ Rate Limiting
+
+Destructive (Write) tools are protected by a rate limiter to prevent accidental repeated execution.
+
+| Tool | Rate Limited |
+|------|--------------|
+| `scan_downloads` | ❌ |
+| `find_large_files` | ❌ |
+| `smart_sort_files` | ✅ 5 seconds |
+| `deduplicate_by_hash` | ✅ 5 seconds |
+| `deduplicate_folders` | ✅ 5 seconds |
+| `auto_extract_and_cleanup` | ✅ 5 seconds |
+| `clear_installers` | ✅ 5 seconds |
+
+Calling a rate-limited tool twice within the window raises `DownloadsWardenError: called too recently`.
 
 ---
 
