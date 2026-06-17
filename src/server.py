@@ -12,6 +12,7 @@ from mcp.server.fastmcp import FastMCP
 from interfaces import IDownloadsService
 from utils import get_downloads_path
 from services import DownloadsService
+from rate_limiter import rate_limited
 
 logging.basicConfig(
     level=logging.INFO,
@@ -68,6 +69,7 @@ async def scan_downloads() -> str:
 
 
 @mcp.tool()
+@rate_limited
 async def smart_sort_files() -> str:
     """Intelligently sort all files in Downloads into category folders.
 
@@ -95,6 +97,7 @@ async def smart_sort_files() -> str:
 
 
 @mcp.tool()
+@rate_limited
 async def deduplicate_by_hash() -> str:
     """Find and remove duplicate files based on SHA-256 hash.
 
@@ -115,6 +118,7 @@ async def deduplicate_by_hash() -> str:
 
 
 @mcp.tool()
+@rate_limited
 async def auto_extract_and_cleanup() -> str:
     """Extract all ZIP files and remove the original archives.
 
@@ -141,6 +145,7 @@ async def auto_extract_and_cleanup() -> str:
 
 
 @mcp.tool()
+@rate_limited
 async def clear_installers() -> str:
     """Remove old installer files (exe, msi, dmg) older than 7 days.
 
@@ -188,6 +193,7 @@ async def find_large_files(min_size_mb: float = 500) -> str:
 
 
 @mcp.tool()
+@rate_limited
 async def deduplicate_folders() -> str:
     """Find and remove duplicate folders based on their contents.
 

@@ -3,6 +3,7 @@
 import sys
 import pytest
 from pathlib import Path
+from datetime import datetime
 from unittest.mock import MagicMock
 
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
@@ -10,13 +11,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 import server
 from server import create_server
 from models import ScanResult, OperationResult, LargeFilesResult, CategoryStats, FileInfo
+from rate_limiter import clear_rate_limit_cache, _last_calls
 
 
 @pytest.fixture(autouse=True)
 def mock_service():
     mock = MagicMock()
     create_server(service=mock)
+    clear_rate_limit_cache()
     yield mock
+    clear_rate_limit_cache()
     from utils import get_downloads_path
     from services import DownloadsService
     create_server(service=DownloadsService(get_downloads_path()))
@@ -183,3 +187,42 @@ def test_create_server_with_path_resolver():
     from services import DownloadsService
     create_server(service=DownloadsService('/tmp/fake_downloads'))
     assert isinstance(server.downloads_service, DownloadsService)
+
+
+# ==================== Rate limiting ====================
+
+@pytest.mark.asyncio
+async def test_rate_limit_blocks_second_call(mock_service):
+    """Second call within rate limit window should raise DownloadsWardenError."""
+    from exceptions import DownloadsWardenError
+    mock_service.smart_sort_files.return_value = OperationResult(
+        success=True, message='ok', count=0
+    )
+    clear_rate_limit_cache()
+    await server.smart_sort_files()
+    with pytest.raises(DownloadsWardenError, match="too recently"):
+        await server.smart_sort_files()
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_allows_call_after_window(mock_service):
+    """Call after rate limit window has passed should succeed."""
+    from datetime import timedelta
+    mock_service.smart_sort_files.return_value = OperationResult(
+        success=True, message='ok', count=0
+    )
+    _last_calls['smart_sort_files'] = datetime.now() - timedelta(seconds=10)
+    result = await server.smart_sort_files()
+    assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_read_only_tools_not_limited(mock_service):
+    """Read-only tools scan_downloads and find_large_files are not rate limited."""
+    mock_service.scan_downloads.return_value = ScanResult(
+        success=True, message='ok', total_files=0, total_size_mb=0.0,
+        by_category={}, by_extension={}
+    )
+    server._last_calls.clear()
+    await server.scan_downloads()
+    await server.scan_downloads()  # should not raise
