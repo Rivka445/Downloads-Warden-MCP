@@ -4,6 +4,14 @@ import hashlib
 from pathlib import Path
 
 
+def _safe_resolve(base: Path, target: Path) -> Path:
+    """Resolve target and ensure it stays within base directory."""
+    resolved = target.resolve()
+    if not str(resolved).startswith(str(base.resolve())):
+        raise ValueError(f"Path traversal detected: {target}")
+    return resolved
+
+
 def get_file_category(file_path: str) -> str:
     """Categorize file by extension."""
     ext = Path(file_path).suffix.lower()
@@ -27,6 +35,8 @@ def get_file_category(file_path: str) -> str:
 
 def calculate_file_hash(file_path: str) -> str:
     """Calculate SHA-256 hash of file."""
+    path = Path(file_path)
+    _safe_resolve(path.parent, path)
     sha256_hash = hashlib.sha256()
     with open(file_path, "rb") as f:
         for byte_block in iter(lambda: f.read(4096), b""):
@@ -37,7 +47,9 @@ def calculate_file_hash(file_path: str) -> str:
 def get_file_size_mb(file_path: str) -> float:
     """Get file size in megabytes."""
     try:
-        size_bytes = Path(file_path).stat().st_size
+        path = Path(file_path)
+        _safe_resolve(path.parent, path)
+        size_bytes = path.stat().st_size
         return size_bytes / (1024 * 1024)
     except Exception:
         return 0.0

@@ -223,6 +223,6 @@ async def test_rate_limit_read_only_tools_not_limited(mock_service):
         success=True, message='ok', total_files=0, total_size_mb=0.0,
         by_category={}, by_extension={}
     )
-    server._last_calls.clear()
+    _last_calls.clear()
     await server.scan_downloads()
     await server.scan_downloads()  # should not raise

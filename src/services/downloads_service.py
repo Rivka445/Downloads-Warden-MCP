@@ -3,9 +3,12 @@
 import shutil
 import zipfile
 import hashlib
+import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 from utils.file_utils import get_file_category, calculate_file_hash, get_file_size_mb
 from interfaces import IDownloadsService
@@ -119,6 +122,10 @@ class DownloadsService(IDownloadsService):
                 extract_dir = self.downloads_path / archive_file.stem
                 extract_dir.mkdir(exist_ok=True)
                 with zipfile.ZipFile(archive_file, 'r') as zip_ref:
+                    for member in zip_ref.namelist():
+                        target = (extract_dir / member).resolve()
+                        if not str(target).startswith(str(extract_dir.resolve())):
+                            raise ExtractionError(archive_file.name, f"Unsafe path in archive: {member}")
                     zip_ref.extractall(extract_dir)
                 archive_file.unlink()
                 extracted_count += 1
@@ -185,8 +192,8 @@ class DownloadsService(IDownloadsService):
                         duplicate_folders.append(folder_path)
                     else:
                         folder_hashes[folder_hash] = folder_path
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("Could not hash folder %s: %s", folder_path, e)
 
         deleted_count = 0
         errors = []
@@ -212,6 +219,6 @@ class DownloadsService(IDownloadsService):
                 try:
                     file_hash = calculate_file_hash(str(file_path))
                     hash_obj.update(file_hash.encode())
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("Could not hash file %s: %s", file_path, e)
         return hash_obj.hexdigest()
