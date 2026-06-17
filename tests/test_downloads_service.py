@@ -1,5 +1,3 @@
-"""Unit tests for DownloadsService."""
-
 import sys
 import pytest
 from pathlib import Path
@@ -9,19 +7,19 @@ import shutil
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from services import DownloadsService
+from exceptions import PathNotFoundError, HashCalculationError
 
 
 class TestDownloadsService:
     """Test suite for DownloadsService."""
-    
+
     # ==================== scan_downloads Tests ====================
-    
+
     def test_scan_downloads_invalid_path(self):
-        """Test scan with invalid path."""
+        """Test scan with invalid path raises PathNotFoundError."""
         service = DownloadsService("/invalid/path/that/does/not/exist")
-        result = service.scan_downloads()
-        assert not result['success']
-        assert "not found" in result['message'].lower()
+        with pytest.raises(PathNotFoundError):
+            service.scan_downloads()
     
     def test_scan_downloads_empty_folder(self, tmp_path):
         """Test scan on empty folder."""

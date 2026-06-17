@@ -8,6 +8,15 @@ from collections import defaultdict
 
 from utils.file_utils import get_file_category, calculate_file_hash, get_file_size_mb
 from interfaces import IDownloadsService
+from exceptions import (
+    DownloadsWardenError,
+    PathNotFoundError,
+    FileMoveError,
+    HashCalculationError,
+    ExtractionError,
+    InstallerCleanupError,
+    FolderDeletionError,
+)
 
 
 class DownloadsService(IDownloadsService):
@@ -21,10 +30,7 @@ class DownloadsService(IDownloadsService):
         """Scan and analyze Downloads folder."""
         try:
             if not self.downloads_path.exists():
-                return {
-                    'success': False,
-                    'message': f"Downloads folder not found at {self.downloads_path}"
-                }
+                raise PathNotFoundError(str(self.downloads_path))
             
             stats = {
                 'total_files': 0,
@@ -53,12 +59,14 @@ class DownloadsService(IDownloadsService):
                 'stats': dict(stats)
             }
         
+        except DownloadsWardenError:
+            raise
         except Exception as e:
             return {
                 'success': False,
                 'message': f"Error scanning downloads: {str(e)}"
             }
-    
+
     def smart_sort_files(self) -> dict:
         """Sort files into category folders."""
         try:
@@ -77,7 +85,7 @@ class DownloadsService(IDownloadsService):
                             shutil.move(str(file_path), str(dest_path))
                             moved_count += 1
                     except Exception as e:
-                        errors.append(f"Error moving {file_path.name}: {str(e)}")
+                        errors.append(FileMoveError(file_path.name, str(e)).args[0])
             
             return {
                 'success': True,
@@ -103,8 +111,8 @@ class DownloadsService(IDownloadsService):
                     try:
                         file_hash = calculate_file_hash(str(file_path))
                         hash_map[file_hash].append(file_path)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        raise HashCalculationError(file_path.name, str(e)) from e
             
             for file_hash, file_list in hash_map.items():
                 if len(file_list) > 1:
@@ -140,7 +148,7 @@ class DownloadsService(IDownloadsService):
                     archive_file.unlink()
                     extracted_count += 1
                 except Exception as e:
-                    errors.append(f"Error extracting {archive_file.name}: {str(e)}")
+                    errors.append(ExtractionError(archive_file.name, str(e)).args[0])
             
             return {
                 'success': True,
@@ -238,7 +246,7 @@ class DownloadsService(IDownloadsService):
                     shutil.rmtree(str(duplicate_folder))
                     deleted_count += 1
                 except Exception as e:
-                    errors.append(f"Error deleting {duplicate_folder.name}: {str(e)}")
+                    errors.append(FolderDeletionError(duplicate_folder.name, str(e)).args[0])
             
             return {
                 'success': True,
