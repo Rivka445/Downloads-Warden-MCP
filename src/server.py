@@ -26,18 +26,15 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP("downloads-warden")
 
 
-def create_server(service: IDownloadsService = None, path_resolver=None) -> FastMCP:
+def create_server(service: IDownloadsService) -> FastMCP:
     """Initialize the MCP server with injected dependencies."""
     global downloads_service
-    if service is not None:
-        downloads_service = service
-    elif path_resolver is not None:
-        downloads_service = DownloadsService(path_resolver())
+    downloads_service = service
     return mcp
 
 
-# Default service (production)
-downloads_service: IDownloadsService = DownloadsService(get_downloads_path())
+# Placeholder — wired in main()
+downloads_service: IDownloadsService
 
 
 @mcp.tool()
@@ -236,6 +233,8 @@ async def deduplicate_folders() -> str:
 def main() -> None:
     """Initialize and run the MCP server."""
     logger.info("Starting Downloads Warden MCP Server")
+    service = DownloadsService(get_downloads_path())
+    create_server(service=service)
     mcp.run(transport="stdio")
 
 

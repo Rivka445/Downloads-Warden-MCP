@@ -178,5 +178,5 @@ def test_create_server_injects_service():
 def test_create_server_with_path_resolver():
     """Verify create_server accepts a path resolver callable."""
     from services import DownloadsService
-    create_server(path_resolver=lambda: '/tmp/fake_downloads')
+    create_server(service=DownloadsService('/tmp/fake_downloads'))
     assert isinstance(server.downloads_service, DownloadsService)
