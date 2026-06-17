@@ -48,8 +48,7 @@ async def scan_downloads() -> str:
     logger.info("Scanning downloads folder")
     result = downloads_service.scan_downloads()
 
-    lines = [
-        f"""📊 Downloads Folder Analysis Report
+    report = f"""📊 Downloads Folder Analysis Report
 {'='*50}
 
 📈 Overall Statistics:
@@ -58,16 +57,15 @@ async def scan_downloads() -> str:
 
 📁 Files by Category:
 """
-    ]
     for category, data in sorted(result.by_category.items()):
-        lines.append(f"   • {category.upper()}: {data.count} files ({data.size_mb:.2f} MB)\n")
+        report += f"   • {category.upper()}: {data.count} files ({data.size_mb:.2f} MB)\n"
 
-    lines.append("\n📄 Top 10 File Types:\n")
+    report += "\n📄 Top 10 File Types:\n"
     sorted_exts = sorted(result.by_extension.items(), key=lambda x: x[1].count, reverse=True)[:10]
     for ext, data in sorted_exts:
-        lines.append(f"   • {ext}: {data.count} files ({data.size_mb:.2f} MB)\n")
+        report += f"   • {ext}: {data.count} files ({data.size_mb:.2f} MB)\n"
 
-    return "".join(lines)
+    return report
 
 
 @mcp.tool()
@@ -86,16 +84,16 @@ async def smart_sort_files() -> str:
     logger.info("Starting smart sort operation")
     result = downloads_service.smart_sort_files()
 
-    lines = [f"{'✅' if result.success else '❌'} Smart Sort Complete!\n\n"]
-    lines.append(f"Moved {result.count} files into organized categories:\n")
-    lines.append("  • documents/\n  • media/\n  • installers/\n  • code/\n  • archives/\n  • other/\n")
+    report = f"{'✅' if result.success else '❌'} Smart Sort Complete!\n\n"
+    report += f"Moved {result.count} files into organized categories:\n"
+    report += "  • documents/\n  • media/\n  • installers/\n  • code/\n  • archives/\n  • other/\n"
 
     if result.errors:
-        lines.append("\n⚠️ Errors:\n")
+        report += "\n⚠️ Errors:\n"
         for error in result.errors:
-            lines.append(f"  • {error}\n")
+            report += f"  • {error}\n"
 
-    return "".join(lines)
+    return report
 
 
 @mcp.tool()
@@ -179,17 +177,19 @@ async def find_large_files(min_size_mb: float = 500) -> str:
     logger.info(f"Finding files larger than {min_size_mb}MB")
     result = downloads_service.find_large_files(min_size_mb)
 
-    lines = [f"🔍 Large Files Report (>{min_size_mb}MB)\n", f"{'='*50}\n\n", f"Found {result.count} large files:\n\n"]
+    report = f"🔍 Large Files Report (>{min_size_mb}MB)\n"
+    report += f"{'='*50}\n\n"
+    report += f"Found {result.count} large files:\n\n"
 
     for file_info in result.files[:20]:
-        lines.append(f"   📄 {file_info.name}\n      Size: {file_info.size_mb:.2f} MB\n\n")
+        report += f"   📄 {file_info.name}\n      Size: {file_info.size_mb:.2f} MB\n\n"
 
     if result.count > 20:
-        lines.append(f"   ... and {result.count - 20} more files\n")
+        report += f"   ... and {result.count - 20} more files\n"
 
-    lines.append(f"\nTotal size of large files: {result.total_size_mb:.2f} MB\n")
+    report += f"\nTotal size of large files: {result.total_size_mb:.2f} MB\n"
 
-    return "".join(lines)
+    return report
 
 
 @mcp.tool()
@@ -207,14 +207,16 @@ async def deduplicate_folders() -> str:
     logger.info("Starting folder deduplication")
     result = downloads_service.deduplicate_folders()
 
-    lines = ["📁 Folder Deduplication Complete!\n\n", f"Removed {result.count} duplicate folders\n", "Freed up space by eliminating redundant directories\n"]
+    report = "📁 Folder Deduplication Complete!\n\n"
+    report += f"Removed {result.count} duplicate folders\n"
+    report += "Freed up space by eliminating redundant directories\n"
 
     if result.errors:
-        lines.append("\n⚠️ Errors:\n")
+        report += "\n⚠️ Errors:\n"
         for error in result.errors:
-            lines.append(f"  • {error}\n")
+            report += f"  • {error}\n"
 
-    return "".join(lines)
+    return report
 
 
 def main() -> None:
