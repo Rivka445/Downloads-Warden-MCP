@@ -13,11 +13,11 @@ from interfaces import IDownloadsService
 class DownloadsService(IDownloadsService):
     """Service for managing Downloads folder operations."""
     
-    def __init__(self, downloads_path: str):
+    def __init__(self, downloads_path: str) -> None:
         """Initialize with downloads path."""
         self.downloads_path = Path(downloads_path)
     
-    def scan_downloads(self):
+    def scan_downloads(self) -> dict:
         """Scan and analyze Downloads folder."""
         try:
             if not self.downloads_path.exists():
@@ -59,7 +59,7 @@ class DownloadsService(IDownloadsService):
                 'message': f"Error scanning downloads: {str(e)}"
             }
     
-    def smart_sort_files(self):
+    def smart_sort_files(self) -> dict:
         """Sort files into category folders."""
         try:
             moved_count = 0
@@ -92,7 +92,7 @@ class DownloadsService(IDownloadsService):
                 'message': f"Error sorting files: {str(e)}"
             }
     
-    def deduplicate_by_hash(self):
+    def deduplicate_by_hash(self) -> dict:
         """Remove duplicate files based on SHA-256 hash."""
         try:
             hash_map = defaultdict(list)
@@ -124,7 +124,7 @@ class DownloadsService(IDownloadsService):
                 'message': f"Error deduplicating files: {str(e)}"
             }
     
-    def auto_extract_and_cleanup(self):
+    def auto_extract_and_cleanup(self) -> dict:
         """Extract ZIP files and remove originals."""
         try:
             extracted_count = 0
@@ -155,7 +155,7 @@ class DownloadsService(IDownloadsService):
                 'message': f"Error extracting archives: {str(e)}"
             }
     
-    def clear_installers(self):
+    def clear_installers(self) -> dict:
         """Remove old installer files (older than 7 days)."""
         try:
             deleted_count = 0
@@ -181,7 +181,7 @@ class DownloadsService(IDownloadsService):
                 'message': f"Error clearing installers: {str(e)}"
             }
     
-    def find_large_files(self, min_size_mb: float = 500):
+    def find_large_files(self, min_size_mb: float = 500) -> dict:
         """Find files larger than specified size."""
         try:
             large_files = []
@@ -209,7 +209,7 @@ class DownloadsService(IDownloadsService):
                 'message': f"Error finding large files: {str(e)}"
             }
     
-    def deduplicate_folders(self):
+    def deduplicate_folders(self) -> dict:
         """Remove duplicate folders based on their contents."""
         try:
             folder_hashes = {}

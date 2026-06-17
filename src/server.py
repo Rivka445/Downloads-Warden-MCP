@@ -233,7 +233,7 @@ async def deduplicate_folders() -> str:
     return report
 
 
-def main():
+def main() -> None:
     """Initialize and run the MCP server."""
     logger.info("Starting Downloads Warden MCP Server")
     mcp.run(transport="stdio")
